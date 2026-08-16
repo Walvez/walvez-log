@@ -1,8 +1,8 @@
 # build output
 dist/
-
-# generated types
+.output/
 .astro/
+.nx/
 
 # dependencies
 node_modules/
@@ -13,6 +13,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+
 # environment variables
 .env
 .env.production
@@ -20,14 +21,10 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
-# jetbrains setting folder
-.idea/
+.node-version
 
-# pagefind
-public/pagefind
+tmp/
+!tmp/.gitkeep
 
-# pnpm
-.pnpm-store
-
-# docker compose
-compose.override.yaml
+public/notion/*
+!public/notion/.gitkeep

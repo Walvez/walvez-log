@@ -1,53 +1,50 @@
-# Walvez's Log — 使用说明
+# Walvez's Log — 使用说明（Notion 版）
 
-个人博客，基于 [AstroPaper](https://github.com/satnaing/astro-paper) v6 主题，
-部署在 Cloudflare Workers（免费）。
+个人博客，基于 [astro-notion-blog](https://github.com/otoyo/astro-notion-blog) 模板。
+**写作在 Notion 里完成**，构建时通过 Notion API 拉取文章，部署在 Cloudflare Pages（免费）。
 
-**线上地址：** https://walvez-log.qx-sync-9f3a7c.workers.dev/
+**线上地址：** https://walvez-log.pages.dev/
 
-## 写文章
+## 写文章（在 Notion 中）
 
-1. 在 `src/content/posts/` 下新建 Markdown 文件（参考 `hello-world.md`）：
+1. 打开 Notion 工作区中的 **astro-notion-blog** 数据库
+2. 点击 **New** 新建条目，填写字段：
+   - **Page**：文章标题（点进去写正文，支持 Notion 全部排版）
+   - **Tags**：分类标签（会显示为彩色标签）
+   - **Date**：发布日期（Published 勾选才会发布）
+   - **Excerpt**：列表页摘要
+   - **FeaturedImage**：封面图 URL
+   - **Slug**：URL 后缀（可留空自动生成）
+   - **Published**：勾选 = 发布
+3. 更新后触发部署：
+   - 方式一：`git push`（改任意文件触发）
+   - 方式二：Cloudflare Pages 控制台 → walvez-log → Deployments → Retry deployment
 
-```markdown
----
-author: Walvez
-pubDatetime: 2026-08-16T00:00:00+08:00
-title: 文章标题
-featured: true        # 是否首页精选
-draft: false          # true = 草稿，不发布
-tags:
-  - 标签1
-description: 文章简介（用于 SEO 和列表页）
----
+## 站点信息修改
 
-正文内容，支持 Markdown 语法。
-```
+在 **Notion 数据库页面本身**修改：
+- 数据库标题 → 站点名
+- 数据库 icon → 站点 logo
+- 页面描述 → 站点副标题
 
-2. 本地预览：`pnpm dev` → http://localhost:4321
-3. 构建并部署：
+## 本地开发
 
 ```bash
-pnpm build            # 生成 dist/ 静态文件 + 搜索索引
-node scripts/deploy.mjs dist walvez-log   # 上传到 Cloudflare Workers
+npm install
+NOTION_API_SECRET=<token> DATABASE_ID=<id> npm run dev   # http://localhost:4321
+NOTION_API_SECRET=<token> DATABASE_ID=<id> npm run build # 构建到 dist/
 ```
 
-## 修改站点信息
+## 关键配置（Cloudflare Pages）
 
-编辑 `astro-paper.config.ts`：
-- `site.title` / `site.description` / `site.author` — 站点名称与作者
-- `site.profile` — 作者主页链接
-- `socials` — 页脚社交链接（github、邮箱等，目前是占位符）
+- 构建命令：`npm run build`（框架预设选 Astro）
+- 输出目录：`dist`
+- 环境变量：
+  - `NOTION_API_SECRET`（secret）— Notion integration token
+  - `DATABASE_ID` — Notion 数据库 ID
+  - `NODE_VERSION=22`
 
-## 部署原理
+## 备注
 
-- 使用 Cloudflare Workers **静态资源直传** API（免费额度：10 万请求/天、2 万个文件）
-- 脚本：`scripts/deploy.mjs`（需 `~/.dsh/.env` 中的 `CLOUDFLARE_API_TOKEN`）
-- 资产去重：重复上传相同文件不会重复计费
-
-## 后续可选升级
-
-- **绑定自己的域名**：在 Cloudflare 控制台添加域名，DNS 指向该 Worker（域名需购买）
-- **GitHub 自动部署**：推送到 GitHub 后连接 Cloudflare Pages（需在 API Token 中
-  添加 Pages 权限，或在控制台操作），实现 push 即发布
-- **评论系统**：参考 AstroPaper 文档集成 Giscus / Twikoo
+- 旧版 AstroPaper 方案（Markdown 写作）已迁移，git 历史中可找回
+- 备用部署通道：`walvez-log.qx-sync-9f3a7c.workers.dev`（旧 Worker，可能过期）

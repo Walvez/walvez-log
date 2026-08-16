@@ -1,85 +1,92 @@
 # 项目记忆 · Walvez's Log
 
 > 本文档是项目的**长期记忆**，供任何会话快速恢复上下文。每次重要变更请同步更新。
-> 最后更新：2026-08-16
+> 最后更新：2026-08-16（从 AstroPaper 迁移到 astro-notion-blog）
 
 ---
 
 ## 1. 项目一句话
 
-Walvez 的个人博客：AstroPaper v6 主题 + Cloudflare Workers 免费托管。
+Walvez 的个人博客：**Notion 作为 CMS**（写作全在 Notion 里）+ astro-notion-blog 模板 + Cloudflare Pages 免费托管（Git 自动部署）。
 
 ## 2. 关键链接（TL;DR）
 
 | 项目 | 值 |
 |---|---|
-| 🌐 线上地址 | https://walvez-log.qx-sync-9f3a7c.workers.dev/ |
-| 🌐 Pages 地址 | https://walvez-log.pages.dev/（Git 自动部署） |
+| 🌐 Pages 线上地址 | https://walvez-log.pages.dev/ |
 | 🐙 GitHub 仓库 | https://github.com/Walvez/walvez-log |
+| 📝 Notion 数据库 | 工作区「walve's Notion」→ Private → **astro-notion-blog**（站点内容都在这） |
 | ☁️ Cloudflare 账户 | Qq1456176105@gmail.com（account id: `903ecee392049ce40f40230ff81bf4d7`） |
-| ☁️ workers.dev 子域 | `qx-sync-9f3a7c` |
-| ⚙️ Worker 名 | `walvez-log` |
-| 📖 使用说明 | 见 `DEPLOY.md` |
+| 📖 使用说明 | 见 `DEPLOY.md`（写作 + 部署流程） |
+
+**凭据（Notion）**
+- DATABASE_ID = `dabd378d25b782e8a1378172340d9604`（不敏感，可入库）
+- NOTION_API_SECRET：**不在仓库中存明文**（GitHub secret scanning 会拦截推送）。它只存在于：① Cloudflare Pages 项目环境变量（secret_text）；② 用户本地 `~/.dsh/.env` 或 `~/Documents/Cloudflare/../notion-token.txt` 之外的个人安全位置。连接名：walvez-blog
 
 ## 3. 技术栈与架构
 
-- **框架**：Astro 7（纯静态 SSG）+ Tailwind CSS v4
-- **主题**：AstroPaper v6.1.0（[satnaing/astro-paper](https://github.com/satnaing/astro-paper)，MIT）
-- **搜索**：Pagefind（构建期生成中文索引）
-- **部署**：Cloudflare Workers **静态资源直传 API**（`scripts/deploy.mjs`）
-  - 免费额度：10 万请求/天、2 万静态文件、单文件 25 MiB
-  - 资产按 sha256 去重，重复部署不重复上传
-- **本地环境**：Node v26 / pnpm v11（AstroPaper 要求 Node ≥ 22.12）
+- **框架**：Astro 5（SSG）+ React 19 + KaTeX + Mermaid + Prism
+- **CMS**：Notion 官方 API（构建时拉取数据库 → 生成静态页）
+- **模板**：[otoyo/astro-notion-blog](https://github.com/otoyo/astro-notion-blog) v0.12.0（MIT，上游 demo: astro-notion-blog.pages.dev）
+- **部署**：Cloudflare Pages 直连 Git（构建命令 `npm run build`，输出 `dist`，NODE_VERSION=22）
+- **构建必需环境变量**：`NOTION_API_SECRET` + `DATABASE_ID`（没有它们构建直接失败）
+- **本地环境**：Node v26 无法编译 re2（模板依赖，V8 API 不兼容）→ **本地构建必须用 Node 22**：
+  ```bash
+  NODE22_BIN="$(dirname "$(npx -y node@22 -p 'process.execPath')")"
+  PATH="$NODE22_BIN:$PATH" npm install
+  PATH="$NODE22_BIN:$PATH" NOTION_API_SECRET=... DATABASE_ID=... npm run build
+  ```
+- 模板会额外下载 Notion 封面图/自定义 icon 到 `public/notion/` 等（构建时通过 integration 完成）
 
-## 4. 本地定制清单（相对上游主题的改动）
+## 4. 站点结构（Notion 侧）
 
-1. `astro-paper.config.ts` — 站点信息（标题/作者/描述/时区 Asia/Shanghai/lang zh-CN）、社交链接、关闭 editPost
-2. `astro.config.ts` — i18n locales 改为 `["zh-CN"]` + defaultLocale zh-CN（**必须**与 site.lang 一致，否则构建报 MissingLocaleError）
-3. `src/components/Datetime.astro` — 日期格式：zh-CN 显示「YYYY年M月D日」
-4. `src/pages/index.astro` — hero 改为「你好，我是 Walvez」+ 中文简介
-5. `src/content/pages/about.md` — 中文关于页
-6. `src/content/posts/hello-world.md` — 首篇文章（featured）
-7. 删除全部示例文章
-8. `scripts/deploy.mjs` — 部署脚本（读取 `~/.dsh/.env` 的 `CLOUDFLARE_API_TOKEN`）
+- 数据库字段：Page（正文）/ Tags（分类标签）/ Date / Excerpt（摘要）/ FeaturedImage（封面 URL）/ Published（勾选=发布）/ Rank（排序）/ Slug
+- **站点名/logo/副标题 = 数据库页面的标题/icon/描述**，在 Notion 里改
+- 支持多语言（Tags 里有语言字段，en/ja 示例文章可删）
+- 8 篇模板示例文章（en/ja 的 Introduction / How-to / Supported blocks / Miyakojima 等）——**待用户决定是否保留**（建议删掉换成自己的）
 
 ## 5. 部署流程（更新网站）
 
 ```bash
-pnpm build                          # → dist/ + pagefind 索引
-node scripts/deploy.mjs dist walvez-log
+# 1. 在 Notion 里写好文章（勾选 Published）
+# 2. 触发 Pages 部署（任选其一）：
+git push                       # 改任意文件
+# 或 Cloudflare 控制台 → walvez-log → Deployments → Retry deployment
 ```
-
-注意：`pnpm build` 包含 `astro check`（类型检查，改配置报错先看这里）。
 
 ## 6. 账户/权限现状
 
-- ✅ API Token（~/.dsh/.env）可操作：Workers、Zones
-- ✅ **Pages:Edit 已加**（2026-08-16 用户确认）
-- ❌ D1 / R2 无权限（暂时用不到）
-- ✅ gh CLI 已登录（Walvez，scopes: repo/workflow/gist）
-- ⚠️ 邮件占位符已改为 qq1456176105@gmail.com（用户 Cloudflare 注册邮箱）
+- ✅ Pages:Edit（用户已授权，项目 `walvez-log` 连接 `Walvez/walvez-log`，push 即部署）
+- ✅ Notion：walvez-blog connection 已创建并连接到博客数据库
+- ✅ API Token（~/.dsh/.env）：Workers、Zones、Pages 均可
+- ✅ gh CLI 已登录（Walvez）
+- ❌ D1 / R2 无权限（用不到）
 
 ## 7. 待办 / 后续计划
 
-- [x] **连接 Cloudflare Pages（Git 自动部署）** — 2026-08-16 完成（浏览器操作）：项目 `walvez-log` 已连接 `Walvez/walvez-log`，构建命令 `pnpm build`，输出目录 `dist`，环境变量 `NODE_VERSION=22`，自动部署开启。**此后 push 即自动发布**，无需再手动跑部署脚本
-- [ ] **绑定自定义域名**（用户计划以后购买，域名接入 Cloudflare DNS 后指向 walvez-log Worker 或 Pages 项目）
-- [ ] 可选：Giscus 评论（需 GitHub Discussions）、Twikoo
-- [ ] 可选：中文 UI 文案（现在导航为英文，i18n 只有 en）
-- [ ] 注意：Rocket Loader 是 zone 级功能，账户暂无 zone，pages.dev 域不适用，无需处理
+- [x] Notion 模板数据库复制 + connection + 共享（2026-08-16，浏览器操作完成）
+- [x] Pages 环境变量：NOTION_API_SECRET（secret_text）、DATABASE_ID（plain_text）、NODE_VERSION=22
+- [x] 本地 Node 22 构建验证
+- [ ] 推送代码触发 Pages 自动部署并验证线上
+- [ ] 删掉模板示例文章（用户确认后），写第一篇真文章
+- [ ] **绑定自定义域名**（用户计划以后购买，接入 Cloudflare DNS 后指向 Pages 项目）
+- [ ] 可选：lainbo.dev 风格定制（侧边栏 Search/Recommended/Categories、彩色标签、Inter+思源黑体字体、KaTeX 已内置）——之前分析过 lainbo/astro-notion-blog fork，只改了 3 个文件
 
 ## 8. 历史决策记录
 
 | 日期 | 决策 | 原因 |
 |---|---|---|
-| 2026-08-16 | 选 AstroPaper 而非全栈方案 | 纯静态、免费额度完全够用、官方演示站就在 CF 上 |
-| 2026-08-16 | 用 Workers 静态资源而非 Pages 直传 | 当时 Token 无 Pages 权限；Workers 同样免费且已跑通 |
-| 2026-08-16 | 最终接入 Pages Git 自动部署 | 用户添加 Pages:Edit 权限 + 浏览器重新授权 GitHub App 后，走标准 Pages 流程（push 即发布）；Worker 部署脚本保留作备用 |
-| 2026-08-16 | lang 用 zh-CN 并同步 i18n 配置 | 中文日期/SEO；不配 i18n.locales 会构建失败 |
-| 2026-08-16 | 部署脚本读 ~/.dsh/.env 的 token | MCP token 与本地 wrangler 未配置，.env 是唯一本地凭据源 |
+| 2026-08-16 | 用 Workers 静态资源直传部署 AstroPaper | Token 当时无 Pages 权限 |
+| 2026-08-16 | 接入 Pages Git 自动部署 | 用户加 Pages:Edit 权限后走标准流程，push 即发布 |
+| 2026-08-16 | **从 AstroPaper(Markdown) 迁移到 astro-notion-blog(Notion CMS)** | 用户看了 lainbo.dev 觉得好看要求复刻；Notion 写作体验好，手机也能写 |
+| 2026-08-16 | 本地构建用 Node 22 而非系统 Node 26 | re2@1.21.4 与 Node 26 V8 API 不兼容，编译失败；Pages 用 NODE_VERSION=22 无此问题 |
+| 2026-08-16 | NOTION_API_SECRET 类型用 secret_text | Pages 环境变量中敏感值用 secret 类型 |
 
 ## 9. 常见问题
 
-- **部署后 404**：等 1-2 分钟 CDN 传播，或检查 subdomain 是否 enabled
-- **构建报 MissingLocaleError**：`astro.config.ts` 的 i18n.locales 必须包含 site.lang
-- **改配置后类型错误**：editPost.enabled=false 时不能带 url 字段
-- **部署脚本报 "No such module"**：模块 part 名必须是 `files`（filename=index.js），不是文件名
+- **构建失败 re2**：本地 Node 太新，用 Node 22（见 §3）
+- **构建失败 401/404 Notion API**：检查 NOTION_API_SECRET / DATABASE_ID 是否配置、数据库是否已连接 walvez-blog
+- **改了 Notion 文章没生效**：Pages 不会自动监听 Notion 变更，需手动 Retry deployment 或 push 触发
+- **站点标题/描述在哪改**：Notion 数据库页面本身（标题=站名，icon=logo，描述=副标题）
+- **Pages 部署流程**：build: `npm run build`；output: `dist`；Framework preset: Astro
+- **旧 Worker 通道**：`walvez-log.qx-sync-9f3a7c.workers.dev` 部署的是旧 AstroPaper 静态站（2026-08-16 早前），已废弃但 URL 仍在
