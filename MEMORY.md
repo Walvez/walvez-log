@@ -13,15 +13,21 @@ Walvez 的个人博客：**Notion 作为 CMS**（写作全在 Notion 里）+ ast
 
 | 项目 | 值 |
 |---|---|
-| 🌐 Pages 线上地址 | https://walvez-log.pages.dev/ |
+| 🌐 Pages 线上地址 | https://walvez-log.pages.dev/（已上线，标题 Walvez's Log） |
 | 🐙 GitHub 仓库 | https://github.com/Walvez/walvez-log |
-| 📝 Notion 数据库 | 工作区「walve's Notion」→ Private → **astro-notion-blog**（站点内容都在这） |
+| 📝 Notion 数据库 | 工作区「walve's Notion」→ Private → **Walvez's Log**（站点内容都在这） |
 | ☁️ Cloudflare 账户 | Qq1456176105@gmail.com（account id: `903ecee392049ce40f40230ff81bf4d7`） |
 | 📖 使用说明 | 见 `DEPLOY.md`（写作 + 部署流程） |
 
 **凭据（Notion）**
 - DATABASE_ID = `dabd378d25b782e8a1378172340d9604`（不敏感，可入库）
-- NOTION_API_SECRET：**不在仓库中存明文**（GitHub secret scanning 会拦截推送）。它只存在于：① Cloudflare Pages 项目环境变量（secret_text）；② 用户本地 `~/.dsh/.env` 或 `~/Documents/Cloudflare/../notion-token.txt` 之外的个人安全位置。连接名：walvez-blog
+- NOTION_API_SECRET：**不在仓库中存明文**（GitHub secret scanning 会拦截推送）。它只存在于：① Cloudflare Pages 项目环境变量（secret_text，类型 secret）；② 本机 shell 历史/笔记。连接名：walvez-blog
+- 更新站点标题/描述/icon 的正确方式（**浏览器编辑不保存，execCommand 无效**）：
+  ```bash
+  curl -s -X PATCH "https://api.notion.com/v1/databases/dabd378d25b782e8a1378172340d9604" \
+    -H "Authorization: Bearer <TOKEN>" -H "Notion-Version: 2022-06-28" -H "Content-Type: application/json" \
+    -d '{"title":[{"text":{"content":"Walvez'"'"'s Log"}}],"description":[{"text":{"content":"描述"}}],"icon":{"type":"emoji","emoji":"📝"}}'
+  ```
 
 ## 3. 技术栈与架构
 
@@ -41,17 +47,18 @@ Walvez 的个人博客：**Notion 作为 CMS**（写作全在 Notion 里）+ ast
 ## 4. 站点结构（Notion 侧）
 
 - 数据库字段：Page（正文）/ Tags（分类标签）/ Date / Excerpt（摘要）/ FeaturedImage（封面 URL）/ Published（勾选=发布）/ Rank（排序）/ Slug
-- **站点名/logo/副标题 = 数据库页面的标题/icon/描述**，在 Notion 里改
+- **站点名/logo/副标题 = 数据库页面的标题/icon/描述**，在 Notion 里改（浏览器里编辑后要确认保存；或走 API，见 §2）
 - 支持多语言（Tags 里有语言字段，en/ja 示例文章可删）
-- 8 篇模板示例文章（en/ja 的 Introduction / How-to / Supported blocks / Miyakojima 等）——**待用户决定是否保留**（建议删掉换成自己的）
+- 8 篇模板示例文章（en/ja 的 Introduction / How-to / Supported blocks / Miyakojima 等）——**当前保留展示中，用户确认后可删**
 
 ## 5. 部署流程（更新网站）
 
 ```bash
-# 1. 在 Notion 里写好文章（勾选 Published）
+# 1. 在 Notion 里写好文章（勾选 Published）——直接浏览器编辑即可（页面内容块编辑正常，与数据库标题不同）
 # 2. 触发 Pages 部署（任选其一）：
-git push                       # 改任意文件
+git push                       # 改任意文件（或空 commit：git commit --allow-empty -m x && git push）
 # 或 Cloudflare 控制台 → walvez-log → Deployments → Retry deployment
+# 注意：构建完全重新执行（~2 分钟），不用管 Pages 缓存
 ```
 
 ## 6. 账户/权限现状
@@ -66,9 +73,12 @@ git push                       # 改任意文件
 
 - [x] Notion 模板数据库复制 + connection + 共享（2026-08-16，浏览器操作完成）
 - [x] Pages 环境变量：NOTION_API_SECRET（secret_text）、DATABASE_ID（plain_text）、NODE_VERSION=22
+- [x] Pages 构建命令改为 `npm run build`（默认是 pnpm，会构建失败）
 - [x] 本地 Node 22 构建验证
-- [ ] 推送代码触发 Pages 自动部署并验证线上
-- [ ] 删掉模板示例文章（用户确认后），写第一篇真文章
+- [x] **推送代码 + 线上验证**（2026-08-16 上线：https://walvez-log.pages.dev/，标题 Walvez's Log）
+- [x] Notion 站点名/描述/icon 更新（API 方式，标题 Walvez's Log / 📝）
+- [x] 删除模板 GitHub Actions workflows（避免每次 push 报 workflow failed 邮件）
+- [ ] **删掉 8 篇模板示例文章，写第一篇真文章**（用户确认后；Notion 里删除对应条目即可）
 - [ ] **绑定自定义域名**（用户计划以后购买，接入 Cloudflare DNS 后指向 Pages 项目）
 - [ ] 可选：lainbo.dev 风格定制（侧边栏 Search/Recommended/Categories、彩色标签、Inter+思源黑体字体、KaTeX 已内置）——之前分析过 lainbo/astro-notion-blog fork，只改了 3 个文件
 
