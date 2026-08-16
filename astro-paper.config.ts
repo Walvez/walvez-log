@@ -6,7 +6,7 @@ export default defineAstroPaperConfig({
     title: "Walvez's Log",
     description: "Walvez 的个人博客 — 记录技术、生活与思考",
     author: "Walvez",
-    profile: "https://github.com/",
+    profile: "https://github.com/Walvez",
     ogImage: "default-og.jpg",
     lang: "zh-CN",
     timezone: "Asia/Shanghai",
@@ -28,8 +28,8 @@ export default defineAstroPaperConfig({
     search: "pagefind",
   },
   socials: [
-    { name: "github",   url: "https://github.com/" },
-    { name: "mail",     url: "mailto:yourmail@gmail.com" },
+    { name: "github",   url: "https://github.com/Walvez" },
+    { name: "mail",     url: "mailto:qq1456176105@gmail.com" },
   ],
   shareLinks: [
     { name: "whatsapp", url: "https://wa.me/?text=" },
