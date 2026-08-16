@@ -14,6 +14,7 @@ Walvez 的个人博客：AstroPaper v6 主题 + Cloudflare Workers 免费托管�
 | 项目 | 值 |
 |---|---|
 | 🌐 线上地址 | https://walvez-log.qx-sync-9f3a7c.workers.dev/ |
+| 🌐 Pages 地址 | https://walvez-log.pages.dev/（Git 自动部署） |
 | 🐙 GitHub 仓库 | https://github.com/Walvez/walvez-log |
 | ☁️ Cloudflare 账户 | Qq1456176105@gmail.com（account id: `903ecee392049ce40f40230ff81bf4d7`） |
 | ☁️ workers.dev 子域 | `qx-sync-9f3a7c` |
@@ -60,15 +61,11 @@ node scripts/deploy.mjs dist walvez-log
 
 ## 7. 待办 / 后续计划
 
-- [ ] **连接 Cloudflare Pages（Git 自动部署）** — 2026-08-16 尝试 API 失败：错误 8000011「Cloudflare Pages Git installation 内部异常」，需要用户在控制台重新授权 GitHub App：
-  1. 打开 https://dash.cloudflare.com/ → Workers 和 Pages → 创建应用程序 → Pages → 连接到 Git
-  2. 按提示重新安装/授权 Cloudflare GitHub App（选择 Walvez/walvez-log）
-  3. 选择仓库 walvez-log，Framework 预设 Astro
-  4. 构建命令 `pnpm build`，输出目录 `dist`，环境变量 `NODE_VERSION=22`
-  5. 部署后建议关闭 Rocket Loader（Speed → Optimization）
-- [ ] **绑定自定义域名**（用户计划以后购买，域名接入 Cloudflare DNS 后指向 walvez-log Worker）
+- [x] **连接 Cloudflare Pages（Git 自动部署）** — 2026-08-16 完成（浏览器操作）：项目 `walvez-log` 已连接 `Walvez/walvez-log`，构建命令 `pnpm build`，输出目录 `dist`，环境变量 `NODE_VERSION=22`，自动部署开启。**此后 push 即自动发布**，无需再手动跑部署脚本
+- [ ] **绑定自定义域名**（用户计划以后购买，域名接入 Cloudflare DNS 后指向 walvez-log Worker 或 Pages 项目）
 - [ ] 可选：Giscus 评论（需 GitHub Discussions）、Twikoo
 - [ ] 可选：中文 UI 文案（现在导航为英文，i18n 只有 en）
+- [ ] 注意：Rocket Loader 是 zone 级功能，账户暂无 zone，pages.dev 域不适用，无需处理
 
 ## 8. 历史决策记录
 
@@ -76,6 +73,7 @@ node scripts/deploy.mjs dist walvez-log
 |---|---|---|
 | 2026-08-16 | 选 AstroPaper 而非全栈方案 | 纯静态、免费额度完全够用、官方演示站就在 CF 上 |
 | 2026-08-16 | 用 Workers 静态资源而非 Pages 直传 | 当时 Token 无 Pages 权限；Workers 同样免费且已跑通 |
+| 2026-08-16 | 最终接入 Pages Git 自动部署 | 用户添加 Pages:Edit 权限 + 浏览器重新授权 GitHub App 后，走标准 Pages 流程（push 即发布）；Worker 部署脚本保留作备用 |
 | 2026-08-16 | lang 用 zh-CN 并同步 i18n 配置 | 中文日期/SEO；不配 i18n.locales 会构建失败 |
 | 2026-08-16 | 部署脚本读 ~/.dsh/.env 的 token | MCP token 与本地 wrangler 未配置，.env 是唯一本地凭据源 |
 
