@@ -60,8 +60,13 @@ node scripts/deploy.mjs dist walvez-log
 
 ## 7. 待办 / 后续计划
 
+- [ ] **连接 Cloudflare Pages（Git 自动部署）** — 2026-08-16 尝试 API 失败：错误 8000011「Cloudflare Pages Git installation 内部异常」，需要用户在控制台重新授权 GitHub App：
+  1. 打开 https://dash.cloudflare.com/ → Workers 和 Pages → 创建应用程序 → Pages → 连接到 Git
+  2. 按提示重新安装/授权 Cloudflare GitHub App（选择 Walvez/walvez-log）
+  3. 选择仓库 walvez-log，Framework 预设 Astro
+  4. 构建命令 `pnpm build`，输出目录 `dist`，环境变量 `NODE_VERSION=22`
+  5. 部署后建议关闭 Rocket Loader（Speed → Optimization）
 - [ ] **绑定自定义域名**（用户计划以后购买，域名接入 Cloudflare DNS 后指向 walvez-log Worker）
-- [ ] GitHub 推送到 `Walvez/walvez-log` 后**连接 Cloudflare Pages**（控制台操作：Pages → Create → Connect to Git，构建命令 `pnpm build`，输出目录 `dist`；记得关 Rocket Loader）
 - [ ] 可选：Giscus 评论（需 GitHub Discussions）、Twikoo
 - [ ] 可选：中文 UI 文案（现在导航为英文，i18n 只有 en）
 
